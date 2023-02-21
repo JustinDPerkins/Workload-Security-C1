@@ -244,9 +244,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'cloudformation:*'
-                  - 'ssm:CreateDocument'
-                  - 'ssm:DescribeDocument'
-                  - 'ssm:DeleteDocument'
+                  - 'ssm:CreateAssociation'
+                  - 'ssm:DescribeAssociation'
+                  - 'ssm:DeleteAssociation'
                   - 'ssm:ListTagsForResource'
                   - 'iam:CreateRole'
                   - 'iam:GetRole'
@@ -285,7 +285,7 @@ Resources:
       TemplateBody: |
         Parameters:
           AccountId:
-            Description: (Required) Account ID where the CSD solution is being deployed (AWS Organization Management or delegated admin).
+            Description: (Required) Account ID where WS is being deployed (AWS Organization Management or delegated admin).
             Type: String
             Default: '123456789012'
         Resources:
