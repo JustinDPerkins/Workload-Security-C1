@@ -244,6 +244,11 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'cloudformation:*'
+                  - 'ssm:PutParameters'
+                  - 'ssm:DescribeParameters'
+                  - 'ssm:DeleteParameters'
+                  - 'ssm:GetParameter'
+                  - 'ssm:GetParameters'
                   - 'ssm:CreateAssociation'
                   - 'ssm:DescribeAssociation'
                   - 'ssm:DeleteAssociation'
