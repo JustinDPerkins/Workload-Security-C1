@@ -278,6 +278,24 @@ Resources:
         - 
           ParameterKey: AccountId
           ParameterValue: !If [IsDelegatedAdministrator,!Ref DelegatedAdminAccountId,!Ref ManagementAccountId]
+        - 
+          ParameterKey: dsActivationUrl
+          ParameterValue: !Ref dsActivationUrl
+        - 
+          ParameterKey: dsManagerUrl
+          ParameterValue: !Ref dsManagerUrl
+        - 
+          ParameterKey: dsTenantId
+          ParameterValue: !Ref dsTenantId
+        - 
+          ParameterKey: dsToken
+          ParameterValue: !Ref dsToken
+        - 
+          ParameterKey: Targetkey
+          ParameterValue: !Ref TargetKey
+        - 
+          ParameterKey: TargetValues
+          ParameterValue: !Ref TargetValues
       PermissionModel: SERVICE_MANAGED
       Capabilities: 
         - CAPABILITY_IAM
@@ -290,9 +308,32 @@ Resources:
       TemplateBody: |
         Parameters:
           AccountId:
-            Description: (Required) Account ID where WS is being deployed (AWS Organization Management or delegated admin).
             Type: String
-            Default: '123456789012'
+            Description: (Required) Account ID where WS is being deployed (AWS Organization Management or delegated admin).
+          dsActivationUrl:
+            Type: String
+            Description: "Cloud One Workload Security Activation URL."
+            NoEcho: true
+          dsManagerUrl:
+            Type: String
+            Description: "Cloud One Workload Security Manager URL."
+            NoEcho: true
+          dsTenantId:
+            Type: String
+            Description: "Cloud One Workload Security Tenant ID."
+            NoEcho: true
+          dsToken:
+            Type: String
+            Description: "Cloud One Workload Security Token ID."
+            NoEcho: true
+          TargetKey:
+            Type: String
+            Description: Specify which instances have to be targeted for this solution. Allowed values - ParameterValues, ResourceGroup or begin with tag:, AWS::EC2::Instance, InstanceIds (default), instanceids. Refer https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html for more details.
+            Default: 'InstanceIds'
+          TargetValues:
+            Type: String
+            Description: Specify the values of the target keys specified above. Default is *, which targets all instances. Refer https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html for more details.
+            Default: '*'
         Resources:
           AutomationExecutionRole:
             Type: 'AWS::IAM::Role'
