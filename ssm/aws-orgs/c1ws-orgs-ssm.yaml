@@ -291,7 +291,7 @@ Resources:
           ParameterKey: dsToken
           ParameterValue: !Ref dsToken
         - 
-          ParameterKey: Targetkey
+          ParameterKey: TargetKey
           ParameterValue: !Ref TargetKey
         - 
           ParameterKey: TargetValues
