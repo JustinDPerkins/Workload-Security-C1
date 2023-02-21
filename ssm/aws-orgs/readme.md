@@ -15,6 +15,7 @@ This solution will distribute Workload Security Software across member accounts 
   - Click Support > Select Deployment Scripts.
   - Copy down the manager URL
   - Copy down the activation URL
+  - Copy down the tenant ID
   - Copy down the token
 
 ---
