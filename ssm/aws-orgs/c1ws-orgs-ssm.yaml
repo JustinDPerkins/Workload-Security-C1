@@ -335,3 +335,59 @@ Resources:
                         Action:
                           - 'iam:PassRole'
                         Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/SystemsManager-AutomationExecutionRole
+          DSActivationUrlParam:
+            Type: "AWS::SSM::Parameter"
+            Properties:
+              Name: "dsActivationUrl"
+              Type: "String"
+              Value: !Ref dsActivationUrl
+              Description: "Cloud One Workload Security Activation URL"
+              Tags:
+                Key: CloudOne
+                Value: WS-SSM
+          DSManagerUrlParam:
+            Type: "AWS::SSM::Parameter"
+            Properties:
+              Name: "dsManagerUrl"
+              Type: "String"
+              Value: !Ref dsManagerUrl
+              Description: "Cloud One Workload Security Manager URL"
+              Tags:
+                Key: CloudOne
+                Value: WS-SSM
+          DSTenantIdParam:
+            Type: "AWS::SSM::Parameter"
+            Properties:
+              Name: "dsTenantId"
+              Type: "String"
+              Value: !Ref dsTenantId
+              Description: "Cloud One Workload Security Tenant ID"
+              Tags:
+                Key: CloudOne
+                Value: WS-SSM
+          DSTokenParam:
+            Type: "AWS::SSM::Parameter"
+            Properties:
+              Name: "dsToken"
+              Type: "String"
+              Value: !Ref dsToken
+              Description: "Cloud One Workload Security Token ID"
+              Tags:
+                Key: CloudOne
+                Value: WS-SSM
+          C1WSDistributorPackage:
+            Type: AWS::SSM::Association
+            Properties:
+              AssociationName: TrendCloudOneWorkloadSecurityAssociation
+              Name: AWS-ConfigureAWSPackage
+              Parameters: 
+                action:
+                  - Install
+                installationType:
+                  - In-place update
+                name:
+                  - TrendMicro-CloudOne-WorkloadSecurity
+              Targets: 
+                - Key: !Ref TargetKey
+                  Values:
+                  - !Ref TargetValues
