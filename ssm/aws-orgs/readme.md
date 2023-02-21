@@ -1,4 +1,4 @@
-# AWS Organizations Tredn Micro SSM Automation
+# AWS Organizations Trend Cloud One Workload Security SSM Automation
 ---
 
 AWS Systems Manager Distributor is a feature integrated with AWS Systems Manager that you can use to securely store and distribute software packages in your accounts. 
@@ -9,7 +9,7 @@ This solution will distribute Workload Security Software across member accounts 
 
 ## Requirements
 
-1. Download the Yaml Template contain the code needed.
+1. Download the Yaml Template above containing the code needed.
 
 2. In the Cloud One Workload Security console.
   - Click Support > Select Deployment Scripts.
