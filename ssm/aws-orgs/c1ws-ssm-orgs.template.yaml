@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: 'CloudFormation template to centralized Workload Security deployment using AWS SSM'
 Metadata:
   AWS::CloudFormation::Interface:
-    ParameterGroups:
+    ParameterGroups: 
       - 
         Label: 
           default: 'Automation details'
