@@ -6,7 +6,7 @@ By integrating Workload Security with AWS Systems Manager Distributor, you can d
 
 This solution will distribute Workload Security across all instances in the deployed AWS regions.
 
-![architecture](org-img.jpg)
+![architecture](single-img.jpg)
 
 ---
 
