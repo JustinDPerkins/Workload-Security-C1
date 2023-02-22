@@ -4,8 +4,11 @@
 AWS Systems Manager Distributor is a feature integrated with AWS Systems Manager that you can use to securely store and distribute software packages in your accounts. 
 By integrating Workload Security with AWS Systems Manager Distributor, you can distribute agents across multiple platforms, control access to managed instances, and automate your deployments.
 
-
 This solution will distribute Workload Security across OU member accounts across all default enabled regions.
+
+![architecture](org-img.jpg)
+
+---
 
 ## Requirements
 
