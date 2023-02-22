@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'CloudFormation template to centralized Workload Security deployment using AWS SSM'
+Description: "WS SSM StackSet"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -26,29 +26,6 @@ Metadata:
           - dsManagerUrl
           - dsTenantId
           - dsToken
-
-    ParameterLabels:
-      IsDelegatedAdministrator:
-        default: 'IsDelegatedAdministrator'
-      DeploymentTargets:
-        default: 'DeploymentTargets'
-      ManagementAccountId:
-        default: 'ManagementAccountId'
-      TargetOUs:
-        default: 'TargetOUs'
-      TargetKey:
-        default: 'TargetKey'
-      TargetValues:
-        default: 'TargetValues'
-      dsActivationUrl:
-        default: 'dsActivationUrl'
-      dsManagerUrl:
-        default: 'dsManagerUrl'
-      dsTenantId:
-        default: 'dsTenantId'
-      dsToken:
-        default: 'dsToken'
-
 Parameters:
   IsDelegatedAdministrator:
     Type: String
@@ -59,6 +36,7 @@ Parameters:
   DeploymentTargets:
     Description: Specify AWS Organizational Unit IDs within AWS Organization whose accounts have the target instances (ou-name) for distribution. (Account IDs are only allowed when updating)
     Type: CommaDelimitedList
+    Default: 'ou-8rkd-yyf0tyki'
   TargetKey:
     Type: String
     Description: Specify which instances have to be targeted for this solution. Allowed values - ParameterValues, ResourceGroup or begin with tag:, AWS::EC2::Instance, InstanceIds (default), instanceids. Refer https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html for more details.
@@ -70,7 +48,7 @@ Parameters:
   ManagementAccountId:
     Description: (Required) AWS Organization's Management account ID.
     Type: String
-    Default: ''
+    Default: '024368254241'
   DelegatedAdminAccountId:
     Description: (Optional) Delegated administrator account ID.
     Type: String
@@ -79,99 +57,79 @@ Parameters:
     Type: String
     Description: "Cloud One Workload Security Activation URL."
     NoEcho: true
+    Default: 'dsm://agents.deepsecurity.trendmicro.com:443/'
   dsManagerUrl:
     Type: String
     Description: "Cloud One Workload Security Manager URL."
     NoEcho: true
+    Default: 'https://app.deepsecurity.trendmicro.com:443'
   dsTenantId:
     Type: String
     Description: "Cloud One Workload Security Tenant ID."
     NoEcho: true
+    Default: 'BF79CB10-0B4C-CCFA-A10F-9E2E4FCEFD03'
   dsToken:
     Type: String
     Description: "Cloud One Workload Security Token ID."
     NoEcho: true
-
+    Default: '57573BC0-3D28-C25D-DDC9-66742C980F07'
+  
 Conditions:
   IsDelegatedAdministrator: 
     !Equals [!Ref IsDelegatedAdministrator,'true']
   IsGovCloud: 
     !Or [!Equals [!Ref AWS::Region, us-gov-west-1], !Equals [!Ref AWS::Region, us-gov-east-1]]
-
 Resources:
-  DSActivationUrlParam:
-    Type: "AWS::SSM::Parameter"
+  StackSetExecutionRole:
+    Type: AWS::IAM::Role
     Properties:
-      Name: "dsActivationUrl"
-      Type: "String"
-      Value: !Ref dsActivationUrl
-      Description: "Cloud One Workload Security Activation URL"
-      Tags:
-        Key: CloudOne
-        Value: WS-SSM
-  DSManagerUrlParam:
-    Type: "AWS::SSM::Parameter"
-    Properties:
-      Name: "dsManagerUrl"
-      Type: "String"
-      Value: !Ref dsManagerUrl
-      Description: "Cloud One Workload Security Manager URL"
-      Tags:
-        Key: CloudOne
-        Value: WS-SSM
-  DSTenantIdParam:
-    Type: "AWS::SSM::Parameter"
-    Properties:
-      Name: "dsTenantId"
-      Type: "String"
-      Value: !Ref dsTenantId
-      Description: "Cloud One Workload Security Tenant ID"
-      Tags:
-        Key: CloudOne
-        Value: WS-SSM
-  DSTokenParam:
-    Type: "AWS::SSM::Parameter"
-    Properties:
-      Name: "dsToken"
-      Type: "String"
-      Value: !Ref dsToken
-      Description: "Cloud One Workload Security Token ID"
-      Tags:
-        Key: CloudOne
-        Value: WS-SSM
-  C1WSDistributorPackage:
-    Type: AWS::SSM::Association
-    Properties:
-      AssociationName: TrendCloudOneWorkloadSecurityAssociation
-      Name: AWS-ConfigureAWSPackage
-      Parameters: 
-        action:
-          - Install
-        installationType:
-          - In-place update
-        name:
-          - TrendMicro-CloudOne-WorkloadSecurity
-      Targets: 
-        - Key: !Ref TargetKey
-          Values:
-          - !Ref TargetValues
-
-  AutomationAdministrationRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Path: "/"
-      RoleName: "SystemsManager-AutomationAdministrationRole"
-      AssumeRolePolicyDocument: >-
-        {"Version":"2012-10-17","Statement":[{"Sid":"","Effect":"Allow","Principal":{"Service":"ssm.amazonaws.com"},"Action":"sts:AssumeRole"}]}
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSSMAutomationRole'
-      Description: "SystemsManager-AutomationAdministrationRole"
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt StackSetAdministrationRole.Arn
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: AutomationAdministrationPolicy
+        - PolicyName: allow-deploy-ssm-dist
           PolicyDocument:
-            Version: 2012-10-17
+            Version: '2012-10-17'
             Statement:
+              - Effect: Allow
+                Action: cloudformation:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:AttachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:PassRole
+                  - iam:DetachRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:DeleteRole
+                  - iam:GetRolePolicy
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - kms:CreateGrant
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:Encrypt
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'ssm:PutParameters'
+                  - 'ssm:DescribeParameters'
+                  - 'ssm:DeleteParameters'
+                  - 'ssm:GetParameter'
+                  - 'ssm:GetParameters'
+                  - 'ssm:CreateAssociation'
+                  - 'ssm:DescribeAssociation'
+                  - 'ssm:DeleteAssociation'
+                  - 'ssm:ListTagsForResource'
+                Resource: '*'
               - Effect: Allow
                 Action:
                   - 'resource-groups:ListGroupResources'
@@ -185,99 +143,33 @@ Resources:
                   - 'ec2messages:GetMessages'
                   - 'organizations:ListAccountsForParent'
                   - 'organizations:ListOrganizationalUnitsForParent'
-                  - 's3:GetObject'
-                  - 's3:ListBucket'
                 Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'sts:AssumeRole'
-                Resource: !Sub 'arn:${AWS::Partition}:iam::*:role/SystemsManager-AutomationExecutionRole'
-              - Effect: Allow
-                Action:
-                  - 'iam:PassRole'
-                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/SystemsManager-AutomationAdministrationRole'
-  
+
   StackSetAdministrationRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       Path: /
-      RoleName: CloudFormation-StackSetAdministrationRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service: cloudformation.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName: AdministrationPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sts:AssumeRole
-                Resource:
-                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/CloudFormation-StackSetExecutionRole"
-      Description: CloudFormation-StackSetAdministrationRole to enable use of CloudFormation Stacksets
-  
-  StackSetExecutionRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      Path: /
-      RoleName: CloudFormation-StackSetExecutionRole
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS:
-                - !If [IsDelegatedAdministrator,!Sub "arn:${AWS::Partition}:iam::${DelegatedAdminAccountId}:root",!Sub "arn:${AWS::Partition}:iam::${ManagementAccountId}:root"]
-            Action:
-              - sts:AssumeRole
-      Policies:
-        - PolicyName: ExecutionPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'cloudformation:*'
-                  - 'ssm:PutParameters'
-                  - 'ssm:DescribeParameters'
-                  - 'ssm:DeleteParameters'
-                  - 'ssm:GetParameter'
-                  - 'ssm:GetParameters'
-                  - 'ssm:CreateAssociation'
-                  - 'ssm:DescribeAssociation'
-                  - 'ssm:DeleteAssociation'
-                  - 'ssm:ListTagsForResource'
-                  - 'iam:CreateRole'
-                  - 'iam:GetRole'
-                  - 'iam:GetRolePolicy'
-                  - 'iam:PassRole'
-                  - 'iam:DetachRolePolicy'
-                  - 'iam:DeleteRolePolicy'
-                  - 'iam:DeleteRole'
-                  - 'iam:CreateRole'
-                  - 'iam:AttachRolePolicy'
-                  - 'iam:PutRolePolicy'
-                Resource: '*'
-      Description: CloudFormation-StackSetExecutionRole to enable use of CloudFormation Stacksets
-  
-  AutomationExecutionRoleStackSet:
+            Action: sts:AssumeRole
+
+  SSMStackSet:
     Type: AWS::CloudFormation::StackSet
-    Properties:
+    Properties: 
       AutoDeployment:
-        Enabled: true
-        RetainStacksOnAccountRemoval: false
-      CallAs: !If [IsDelegatedAdministrator,DELEGATED_ADMIN,SELF] 
-      StackSetName: SystemsManagerAutomationExecutionRole
-      Parameters:
-        - 
-          ParameterKey: AccountId
-          ParameterValue: !If [IsDelegatedAdministrator,!Ref DelegatedAdminAccountId,!Ref ManagementAccountId]
+          Enabled: true
+          RetainStacksOnAccountRemoval: false
+      CallAs: !If [IsDelegatedAdministrator,DELEGATED_ADMIN,SELF]
+      Capabilities:
+          - CAPABILITY_AUTO_EXPAND
+          - CAPABILITY_IAM
+          - CAPABILITY_NAMED_IAM
+      Description: SSM Stackset for C1WS
+      Parameters: 
         - 
           ParameterKey: dsActivationUrl
           ParameterValue: !Ref dsActivationUrl
@@ -297,19 +189,15 @@ Resources:
           ParameterKey: TargetValues
           ParameterValue: !Ref TargetValues
       PermissionModel: SERVICE_MANAGED
-      Capabilities: 
-        - CAPABILITY_IAM
-        - CAPABILITY_NAMED_IAM
       StackInstancesGroup:
-        - Regions: 
-          - !If [IsGovCloud, us-gov-west-1, us-east-1]
-          DeploymentTargets:
-            OrganizationalUnitIds: !Ref DeploymentTargets 
+          - Regions:
+            - us-east-1
+            - us-east-2
+            DeploymentTargets:
+              OrganizationalUnitIds: !Ref DeploymentTargets
+      StackSetName: C1WS-SSM-StackSet
       TemplateBody: |
         Parameters:
-          AccountId:
-            Type: String
-            Description: (Required) Account ID where WS is being deployed (AWS Organization Management or delegated admin).
           dsActivationUrl:
             Type: String
             Description: "Cloud One Workload Security Activation URL."
@@ -335,47 +223,6 @@ Resources:
             Description: Specify the values of the target keys specified above. Default is *, which targets all instances. Refer https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html for more details.
             Default: '*'
         Resources:
-          AutomationExecutionRole:
-            Type: 'AWS::IAM::Role'
-            Properties:
-              RoleName: SystemsManager-AutomationExecutionRole
-              AssumeRolePolicyDocument:
-                Version: 2012-10-17
-                Statement:
-                  - Effect: Allow
-                    Principal:
-                      AWS: !Ref AccountId
-                    Action:
-                      - 'sts:AssumeRole'
-                  - Effect: Allow
-                    Principal:
-                      Service: ssm.amazonaws.com
-                    Action:
-                      - 'sts:AssumeRole'
-              ManagedPolicyArns:
-                - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSSMAutomationRole'
-              Path: /
-              Policies:
-                - PolicyName: ExecutionPolicy
-                  PolicyDocument:
-                    Version: 2012-10-17
-                    Statement:
-                      - Effect: Allow
-                        Action:
-                          - 'resource-groups:ListGroupResources'
-                          - 'tag:GetResources'
-                          - 'ec2:DescribeInstances'
-                          - 'ec2:DescribeTags'
-                          - 'ec2messages:GetEndpoint'
-                          - 'ec2messages:FailMessage'
-                          - 'ec2messages:AcknowledgeMessage'
-                          - 'ec2messages:SendReply'
-                          - 'ec2messages:GetMessages'
-                        Resource: '*'
-                      - Effect: Allow
-                        Action:
-                          - 'iam:PassRole'
-                        Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/SystemsManager-AutomationExecutionRole
           DSActivationUrlParam:
             Type: "AWS::SSM::Parameter"
             Properties:
@@ -432,3 +279,4 @@ Resources:
                 - Key: !Ref TargetKey
                   Values:
                   - !Ref TargetValues
+
